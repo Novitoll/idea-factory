@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<style>
+
+.links line {
+  stroke: #999;
+  stroke-opacity: 0.6;
+}
+
+.nodes circle {
+  stroke: #fff;
+  stroke-width: 1.5px;
+}
+
+</style>
+<svg width="960" height="600"></svg>
+<script src="https://d3js.org/d3.v4.min.js"></script>
+<script>
+
+var svg = d3.select("svg"),
+    width = +svg.attr("width"),
+    height = +svg.attr("height");
+
+var color = d3.scaleOrdinal(d3.schemeCategory20);
+
+var simulation = d3.forceSimulation()
+    .force("link", d3.forceLink()
+      .id(function(d) { return d.id; })
+      .distance(function(d) { return d.value * 150; })
+    )
+    .force("charge", d3.forceManyBody())
+    .force("center", d3.forceCenter(width / 2, height / 2));
+
+var graph = {
+  "nodes": [
+    {"id": "Robert Millikan", "group": 1},
+    {"id": "Harvey Fletcher", "group": 1},
+    {"id": "Harold Arnold", "group": 2},
+    {"id": "Clinton Davisson", "group": 2},
+    {"id": "Frank Jewett", "group": 2},
+    {"id": "John Carty", "group": 2},
+    {"id": "Theodore Vail", "group": 2},
+    {"id": "Mervin Kelly", "group": 2},
+    {"id": "William Shockley", "group": 3},
+    {"id": "Jim Fisk", "group": 3},
+    {"id": "John Pierce", "group": 3},
+    {"id": "Dean Wooldridge", "group": 3},
+    {"id": "Charles Townes", "group": 3},
+    {"id": "Oliver Buckley", "group": 3}
+  ],
+  "links": [
+    {"source": "John Carty", "target": "Frank Jewett", "value": 2, "rel": "boss"},
+    {"source": "Theodore Vail", "target": "John Carty", "value": 3, "rel": "boss"},
+
+    {"source": "Robert Millikan", "target": "Mervin Kelly", "value": 1, "rel": "mentor"},
+    {"source": "Robert Millikan", "target": "Harvey Fletcher", "value": 1, "rel": "mentor"},
+    {"source": "Robert Millikan", "target": "Frank Jewett", "value": 2, "rel": "friend"},
+
+    {"source": "Frank Jewett", "target": "Harold Arnold", "value": 1, "rel": "boss"},
+    {"source": "Frank Jewett", "target": "Oliver Buckley", "value": 1, "rel": "boss"},
+
+    {"source": "Harold Arnold", "target": "Clinton Davisson", "value": 2, "rel": "boss"},
+    {"source": "Harold Arnold", "target": "Mervin Kelly", "value": 2, "rel": "boss"},
+    {"source": "Oliver Buckley", "target": "Mervin Kelly", "value": 1, "rel": "boss"},
+    
+    {"source": "Mervin Kelly", "target": "Clinton Davisson", "value": 1, "rel": "teammate"},
+    {"source": "Mervin Kelly", "target": "William Shockley", "value": 1, "rel": "mentor"},
+    {"source": "Mervin Kelly", "target": "Jim Fisk", "value": 1, "rel": "mentor"},
+    {"source": "Mervin Kelly", "target": "John Pierce", "value": 1, "rel": "mentor"},
+    {"source": "Mervin Kelly", "target": "Dean Wooldridge", "value": 1, "rel": "mentor"},
+    {"source": "Mervin Kelly", "target": "Charles Townes", "value": 1, "rel": "mentor"}
+  ]
+};
+
+// d3.json("relationship.json", function(error, graph) {
+  // if (error) throw error;
+
+  var link = svg.append("g")
+      .attr("class", "links")
+    .selectAll("line")
+    .data(graph.links)
+    .enter().append("line")
+      .attr("stroke-width", function(d) { return Math.sqrt(d.value) * 2; });
+
+  var node = svg.append("g")
+      .attr("class", "nodes")
+    .selectAll("circle")
+    .data(graph.nodes)
+    .enter()
+      .append("circle")
+      .attr("r", 19)
+      .attr("fill", function(d) { return color(d.group); })
+      .call(d3.drag()
+          .on("start", dragstarted)
+          .on("drag", dragged)
+          .on("end", dragended));
+
+  node.append("title")
+      .text(function(d) { return d.id; })
+
+  node.append("text")
+      .attr("dx", 10)
+      .attr("dy", 15)
+      .text(function(d) { return d.id; })
+
+  simulation
+      .nodes(graph.nodes)
+      .on("tick", ticked);
+
+  simulation.force("link")
+      .links(graph.links);
+
+  function ticked() {
+    link
+        .attr("x1", function(d) { return d.source.x; })
+        .attr("y1", function(d) { return d.source.y; })
+        .attr("x2", function(d) { return d.target.x; })
+        .attr("y2", function(d) { return d.target.y; });
+
+    node
+        .attr("cx", function(d) { return d.x; })
+        .attr("cy", function(d) { return d.y; });
+  }
+// });
+
+function dragstarted(d) {
+  if (!d3.event.active) simulation.alphaTarget(0.3).restart();
+  d.fx = d.x;
+  d.fy = d.y;
+}
+
+function dragged(d) {
+  d.fx = d3.event.x;
+  d.fy = d3.event.y;
+}
+
+function dragended(d) {
+  if (!d3.event.active) simulation.alphaTarget(0);
+  d.fx = null;
+  d.fy = null;
+}
+
+</script>
